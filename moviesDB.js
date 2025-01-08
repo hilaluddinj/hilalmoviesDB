@@ -1,5 +1,6 @@
 // ======= Callback Latihan ========
-$(".search-button").on("click", function () {
+$(".search-button").on("click", function (e) {
+  e.preventDefault();
   $.ajax({
     url:
       "https://www.omdbapi.com/?apikey=c769a58b&s=" + $(".input-keyword").val(),
