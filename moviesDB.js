@@ -1,38 +1,59 @@
-// ======= Callback Latihan ========
-$(".search-button").on("click", function (e) {
-  e.preventDefault();
-  $.ajax({
-    url:
-      "https://www.omdbapi.com/?apikey=c769a58b&s=" + $(".input-keyword").val(),
-    success: (results) => {
-      const movies = results.Search;
-      let cards = "";
-      movies.forEach((m) => {
-        cards += showCards(m);
-      });
-      $(".movie-container").html(cards);
-
-      // ketika tombol diklik
-      $(".modal-button").on("click", function () {
-        $.ajax({
-          url:
-            "https://www.omdbapi.com/?apikey=c769a58b&i=" +
-            $(this).data("imdbid"),
-          success: (m) => {
-            const moveiDetail = showMovieDetail(m);
-            $(".modal-body").html(moveiDetail);
-          },
-          error: (e) => {
-            console.log(e.responseText);
-          },
-        });
-      });
-    },
-    error: (e) => {
-      console.log(e.responseText);
-    },
-  });
+// =========== Fetch Refactor (Async Await) ============
+const searchMovies = document.querySelector(".search-button");
+searchMovies.addEventListener("click", async function (e) {
+  try {
+    e.preventDefault();
+    const inputKeyword = document.querySelector(".input-keyword");
+    const movies = await getMovies(inputKeyword.value);
+    updateUI(movies);
+  } catch (err) {
+    alert(err);
+  }
 });
+
+function getMovies(keyword) {
+  return fetch("https://www.omdbapi.com/?apikey=c769a58b&s=" + keyword)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error((response.statusText = "API Key Not Found!"));
+      }
+      return response.json();
+    })
+    .then((response) => {
+      if (response.Response === "False") {
+        throw new Error(response.Error);
+      }
+      return response.Search;
+    });
+}
+
+function updateUI(movies) {
+  let cards = "";
+  movies.forEach((m) => (cards += showCards(m)));
+  const movieContainer = document.querySelector(".movie-container");
+  movieContainer.innerHTML = cards;
+}
+
+// ketika movie details di klik menggunakan event binding
+document.addEventListener("click", async function (e) {
+  if (e.target.classList.contains("modal-button")) {
+    const imdbid = e.target.dataset.imdbid;
+    const movieDetail = await getMovieDetail(imdbid);
+    updateMovieDetail(movieDetail);
+  }
+});
+
+function getMovieDetail(imdbid) {
+  return fetch("https://www.omdbapi.com/?apikey=c769a58b&i=" + imdbid)
+    .then((response) => response.json())
+    .then((m) => m);
+}
+
+function updateMovieDetail(m) {
+  const moveiDetail = showMovieDetail(m);
+  const modalBody = document.querySelector(".modal-body");
+  modalBody.innerHTML = moveiDetail;
+}
 
 function showCards(m) {
   return `<div class="col-md-4 my-3">
